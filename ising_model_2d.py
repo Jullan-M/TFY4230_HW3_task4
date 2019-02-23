@@ -51,9 +51,13 @@ class Ising_2D:
         self.P_len = 2**n
 
         #   Arrays/matrices
-        self.sigma_arr = generate_spin_conf(n)
+        self.sigma_arr = generate_spin_conf(self.n)
+        self.P_matrix_nopow = np.zeros((self.P_len, self.P_len))
         self.P_matrix = np.zeros((self.P_len, self.P_len))
         self.lambdas = np.zeros(self.P_len)
+
+    def update_sigma_arr(self):
+        self.sigma_arr = generate_spin_conf(self.n)
 
     def generate_P_matrix(self):
         for l in range(self.P_len):
@@ -63,26 +67,60 @@ class Ising_2D:
                 chain_sum = np.sum(self.sigma_arr[l] * np.roll(self.sigma_arr[l], -1))
                 b_sum = np.sum(self.sigma_arr[l] + self.sigma_arr[m])
 
-                self.P_matrix[l, m] = np.exp(self.beta * (self.J[0] * site_sum + self.J[1] * chain_sum + self.B / 2 * b_sum))
+                self.P_matrix_nopow[l, m] = np.exp(self.J[0] * site_sum + self.J[1] * chain_sum + self.B / 2 * b_sum)
+                self.P_matrix = self.P_matrix_nopow**self.beta
+
+    def refresh_P_matrix_beta(self):
+        self.P_matrix = self.P_matrix_nopow**self.beta
+
+    def find_lambdas(self):
+        self.lambdas = np.linalg.eigvals(self.P_matrix)
+
+
+def lambda_afo_beta(ising, beta_low, beta_high, dbeta):
+    ising.generate_P_matrix()
+    steps = int((beta_high - beta_low) / dbeta)
+    betas = np.linspace(beta_low, beta_high, steps)
+    lambdas_arr = np.zeros((steps, 2**ising.n))
+    for i in range(steps):
+        print("hey!,", i)
+        ising.beta = beta_low * dbeta * (i+1)
+        ising.refresh_P_matrix_beta()
+        ising.find_lambdas()
+        lambdas_arr[i] = np.real(ising.lambdas)
+    return lambdas_arr, betas
 
 
 
 
+if (__name__ == "__main__"):
+    #   Oppgave 4, a)
+    sigma_arr = generate_spin_conf(5)
+    print(sigma_arr)
+    print(len(sigma_arr))
+
+    #   Oppgave 4, b)
+    is1 = Ising_2D(2)
+    is1.generate_P_matrix()
+    print(is1.P_matrix)
+
+    #   Oppgave 4, c)
+    is2 = Ising_2D(9)
+    lambdas_arr, betas = lambda_afo_beta(is2, 0.005, 1.000, 0.995/100)
+
+    plt.figure()
+    for i in range(2**is2.n):
+        plt.semilogy(betas, lambdas_arr[:,i], color="k")
+    plt.xlabel(r"$\beta$", fontsize=16)
+    plt.ylabel(r"$\lambda$-values", fontsize=16)
+    plt.legend()
+    plt.grid()
+    #plt.savefig(".pdf")
+    plt.show()
 
 
 
 
-
-
-#   Oppgave 4, a)
-sigma_arr = generate_spin_conf(5)
-print(sigma_arr)
-print(len(sigma_arr))
-
-#   Oppgave 4, b)
-is1 = Ising_2D(1)
-is1.generate_P_matrix()
-print(is1.P_matrix)
 
 
 
