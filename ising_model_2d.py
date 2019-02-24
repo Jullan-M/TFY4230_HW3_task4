@@ -7,8 +7,8 @@ import timeit
 from matplotlib import pyplot as plt
 
 KB = 1.38064852e-23
-J_PAIR = np.array([1,1])
-B = 1
+J_PAIR = np.array([1,2])
+B = 0.5
 BETA = 1
 
 #   Generates the possible 2^n spin-configurations
@@ -27,6 +27,7 @@ def generate_spin_conf_slow(n):
     return sigma
 
 def generate_P_matrix(sigma_arr, J, B, k, n, beta):
+    #   Old, unused function
     arr_len = len(sigma_arr)
     P_arr = np.zeros((arr_len, arr_len))
     for l in range(arr_len):
@@ -68,7 +69,7 @@ class Ising_2D:
                 b_sum = np.sum(self.sigma_arr[l] + self.sigma_arr[m])
 
                 self.P_matrix_nopow[l, m] = np.exp(self.J[0] * site_sum + self.J[1] * chain_sum + self.B / 2 * b_sum)
-                self.P_matrix = self.P_matrix_nopow**self.beta
+        self.P_matrix = self.P_matrix_nopow ** self.beta
 
     def refresh_P_matrix_beta(self):
         self.P_matrix = self.P_matrix_nopow**self.beta
@@ -80,7 +81,6 @@ class Ising_2D:
 def lambda_afo_beta(ising, beta_low, beta_high, dbeta):
     ising.generate_P_matrix()
     steps = int((beta_high - beta_low) / dbeta)
-    betas = np.linspace(beta_low, beta_high, steps)
     lambdas_arr = np.zeros((steps, 2**ising.n))
     for i in range(steps):
         print("hey!,", i)
@@ -88,7 +88,7 @@ def lambda_afo_beta(ising, beta_low, beta_high, dbeta):
         ising.refresh_P_matrix_beta()
         ising.find_lambdas()
         lambdas_arr[i] = np.real(ising.lambdas)
-    return lambdas_arr, betas
+    return lambdas_arr
 
 
 
@@ -105,18 +105,27 @@ if (__name__ == "__main__"):
     print(is1.P_matrix)
 
     #   Oppgave 4, c)
-    is2 = Ising_2D(9)
-    lambdas_arr, betas = lambda_afo_beta(is2, 0.005, 1.000, 0.995/100)
+    is_arr = []
+    for i in range(8):
+        is_arr.append(Ising_2D(i+1))
 
-    plt.figure()
-    for i in range(2**is2.n):
-        plt.semilogy(betas, lambdas_arr[:,i], color="k")
-    plt.xlabel(r"$\beta$", fontsize=16)
-    plt.ylabel(r"$\lambda$-values", fontsize=16)
-    plt.legend()
-    plt.grid()
-    #plt.savefig(".pdf")
-    plt.show()
+    beta_low = 0.005
+    beta_high = 1.000
+    steps = 100
+    betas = np.linspace(beta_low, beta_high, steps)
+
+    for ising in is_arr:
+        lambdas_arr = lambda_afo_beta(ising, beta_low, beta_high, (beta_high - beta_low)/steps)
+        plt.figure()
+        plt.title(r"$n$ = " + str(ising.n) + "; $J_{\parallel}$,$J_{\\bot}$ = " + str(ising.J[0]) + "," + str(ising.J[1]) + "; $B$ = " + str(ising.B))
+        for i in range(2**ising.n):
+            plt.semilogy(betas, lambdas_arr[:,i], color="k")
+        plt.xlabel(r"$\beta$", fontsize=16)
+        plt.ylabel(r"$\lambda$-values", fontsize=16)
+        plt.legend()
+        plt.grid()
+        #plt.savefig(".pdf")
+        plt.show()
 
 
 
