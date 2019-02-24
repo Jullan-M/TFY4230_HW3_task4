@@ -6,6 +6,11 @@ from sympy.utilities.iterables import permute_signs
 import timeit
 from matplotlib import pyplot as plt
 
+def get_cmap(n, name='hsv'):
+    '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct
+    RGB color; the keyword argument name must be a standard mpl colormap name.'''
+    return plt.cm.get_cmap(name, n)
+
 KB = 1.38064852e-23
 J_PAIR = np.array([1,2])
 B = 0.5
@@ -105,21 +110,26 @@ if (__name__ == "__main__"):
     print(is1.P_matrix)
 
     #   Oppgave 4, c)
-    is_arr = []
-    for i in range(8):
-        is_arr.append(Ising_2D(i+1))
 
+    #   Setup
+    n_max = 9
     beta_low = 0.005
     beta_high = 1.000
     steps = 100
+
+    is_arr = []
+    for i in range(n_max):
+        is_arr.append(Ising_2D(i+1))
+
     betas = np.linspace(beta_low, beta_high, steps)
 
     for ising in is_arr:
+        cmap = get_cmap(ising.P_len)
         lambdas_arr = lambda_afo_beta(ising, beta_low, beta_high, (beta_high - beta_low)/steps)
         plt.figure()
         plt.title(r"$n$ = " + str(ising.n) + "; $J_{\parallel}$,$J_{\\bot}$ = " + str(ising.J[0]) + "," + str(ising.J[1]) + "; $B$ = " + str(ising.B))
         for i in range(2**ising.n):
-            plt.semilogy(betas, lambdas_arr[:,i], color="k")
+            plt.semilogy(betas, lambdas_arr[:,i], color=cmap(i))
         plt.xlabel(r"$\beta$", fontsize=16)
         plt.ylabel(r"$\lambda$-values", fontsize=16)
         plt.legend()
