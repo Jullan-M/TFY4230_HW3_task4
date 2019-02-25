@@ -13,7 +13,7 @@ def get_cmap(n, name='hsv'):
 
 KB = 1.38064852e-23
 J_PAIR = np.array([1,2])
-B = 0.5
+B = 5
 BETA = 1
 
 #   Generates the possible 2^n spin-configurations
@@ -88,14 +88,16 @@ def lambda_afo_beta(ising, beta_low, beta_high, dbeta):
     steps = int((beta_high - beta_low) / dbeta)
     lambdas_arr = np.zeros((steps, 2**ising.n))
     for i in range(steps):
-        print("hey!,", i)
+        #print("hey!,", i)
         ising.beta = beta_low + dbeta * i
         ising.refresh_P_matrix_beta()
         ising.find_lambdas()
         lambdas_arr[i] = np.real(ising.lambdas)
     return lambdas_arr
 
-
+def m_afo_bB(ising, bB_low, bB_high, dbB):
+    ising.generate_P_matrix()
+    steps = int((bB_high - bB_low) / dbB)
 
 
 if (__name__ == "__main__"):
@@ -116,6 +118,7 @@ if (__name__ == "__main__"):
     beta_low = 0.005
     beta_high = 1.000
     steps = 100
+    dbeta = (beta_high - beta_low)/steps
 
     is_arr = []
     for i in range(n_max):
@@ -124,15 +127,16 @@ if (__name__ == "__main__"):
     betas = np.linspace(beta_low, beta_high, steps, endpoint=False)
 
     for ising in is_arr:
+        print("n=", ising.n)
         cmap = get_cmap(ising.P_len)
-        lambdas_arr = lambda_afo_beta(ising, beta_low, beta_high, (beta_high - beta_low)/steps)
+        lambdas_arr = lambda_afo_beta(ising, beta_low, beta_high, dbeta)
+        print(lambdas_arr[0])
         plt.figure()
         plt.title(r"$n$ = " + str(ising.n) + "; $J_{\parallel}$,$J_{\\bot}$ = " + str(ising.J[0]) + "," + str(ising.J[1]) + "; $B$ = " + str(ising.B))
         for i in range(2**ising.n):
             plt.semilogy(betas, lambdas_arr[:,i], color=cmap(i))
         plt.xlabel(r"$\beta$", fontsize=16)
         plt.ylabel(r"$\lambda$-values", fontsize=16)
-        plt.legend()
         plt.grid()
         #plt.savefig(".pdf")
         plt.show()
