@@ -137,6 +137,10 @@ if (__name__ == "__main__"):
         #plt.savefig(".pdf")
         plt.show()
 
+    #   Oppgave 4, d)
+    
+
+
 
 
 
