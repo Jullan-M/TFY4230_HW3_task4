@@ -89,7 +89,7 @@ def lambda_afo_beta(ising, beta_low, beta_high, dbeta):
     lambdas_arr = np.zeros((steps, 2**ising.n))
     for i in range(steps):
         print("hey!,", i)
-        ising.beta = beta_low * dbeta * (i+1)
+        ising.beta = beta_low + dbeta * i
         ising.refresh_P_matrix_beta()
         ising.find_lambdas()
         lambdas_arr[i] = np.real(ising.lambdas)
@@ -121,7 +121,7 @@ if (__name__ == "__main__"):
     for i in range(n_max):
         is_arr.append(Ising_2D(i+1))
 
-    betas = np.linspace(beta_low, beta_high, steps)
+    betas = np.linspace(beta_low, beta_high, steps, endpoint=False)
 
     for ising in is_arr:
         cmap = get_cmap(ising.P_len)
@@ -138,7 +138,7 @@ if (__name__ == "__main__"):
         plt.show()
 
     #   Oppgave 4, d)
-    
+
 
 
 
